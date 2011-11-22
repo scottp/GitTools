@@ -1,0 +1,110 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+use Cwd;
+
+# COPYRIGHT: Scott Penrose, scottp@dd.com.au, http://scott.dd.com.au/, 2011
+# LICENSE: Artistic 2.0 - http://www.opensource.org/licenses/Artistic-2.0
+# PURPOSE: Add a repository by name
+# VERSION: Pre-Alpha
+
+# ------------------------------------------------------------------------------
+my $type = shift || "";
+
+# USB Key
+if ($type eq 'key') {
+	print STDERR "Adding key\n";
+}
+
+# S3
+elsif ($type eq 's3') {
+	print STDERR "Adding s3\n";
+}
+
+# Backup (TODO: Add origin as alternative name for same location)
+elsif ($type eq 'bak') {
+	print STDERR "Adding bak\n";
+}
+
+# TODO: Add github
+
+else {
+	die "Not a valid type: key,s3,bak\n";
+}
+
+my $ssh = $ENV{XGIT_SSH} || die("Must provide XGIT_SSH");
+my $KEYDIR = $ENV{XGIT_KEYDIR} || die("Must provide XGIT_KEYDIR");
+my $S3 = $ENV{XGIT_S3} || die("Must provide XGIT_S3");
+die "Not a valid local git repo\n" unless (-d ".git");
+
+# ------------------------------------------------------------------------------
+my $cwd = getcwd;
+my $short = $cwd;
+$short =~ s|^.+/||g;
+die "Not a valid directory\n" unless ($short);
+die "Not valid git subdir\n" unless (-d "../$short/.git");
+
+# Check the 'remote' exists'
+open (my $in, "git remote |");
+my $found = 0;
+while (<$in>) {
+	if ($_ =~ /$type/) {
+		$found = 1;
+		last;
+	}
+}
+close $in;
+die "$type was already found\n" if ($found);
+
+my $remote = "";
+
+# ------------------------------------------------------------------------------
+# Check the 'repository' already exists
+
+if ($type eq 'key') {
+	if (! -d "$KEYDIR/$short.git") {
+		print STDERR "Making bare repo on $KEYDIR\n";
+		chdir $KEYDIR;
+		die "Not keydir (" . getcwd . ")\n" unless (getcwd eq $KEYDIR);
+		system ('git clone --bare ' . $cwd);
+		# XXX Errors
+		chdir $cwd;
+	}
+	$remote = "$KEYDIR/$short.git";
+}
+
+elsif ($type eq 'bak') {
+
+	$found = 0;
+	open (my $exec, "ssh $ssh 'ls -d $short.git' |");
+	while (<$exec>) {
+		if (/$short/) {
+			$found = 1;
+			last;
+		}
+	}
+	close $exec;
+	if (! $found) {
+		print STDERR "Making bare repo on $ssh\n";
+		mkdir "/tmp/$$";
+		chdir "/tmp/$$";
+		system ('git clone --bare ' . $cwd);
+		system("rsync -a $short.git $ssh:~/");
+		chdir $cwd;
+	}
+	$remote = "$ssh:$short";
+}
+
+elsif ($type eq 's3') {
+	$remote = $S3 . '/' . $cwd . '.git';
+}
+
+else {
+	die "Assert: No valid type";
+}
+
+# ------------------------------------------------------------------------------
+print STDERR "Adding $type $remote\n";
+system("git remote add $type $remote");
+system('git remote -v');
+

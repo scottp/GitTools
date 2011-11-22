@@ -1,0 +1,62 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+use Cwd;
+
+# COPYRIGHT: Scott Penrose, scottp@dd.com.au, http://scott.dd.com.au/, 2011
+# LICENSE: Artistic 2.0 - http://www.opensource.org/licenses/Artistic-2.0
+# PURPOSE: List repositories at a location, by name and clone URL
+# VERSION: Pre-Alpha
+
+
+# ------------------------------------------------------------------------------
+my $type = shift || "";
+if ($type eq 'key') {
+	print STDERR "Listing key\n";
+}
+elsif ($type eq 's3') {
+	print STDERR "Listing s3\n";
+}
+# TODO or origin
+elsif ($type eq 'bak') {
+	print STDERR "Listing bak\n";
+}
+# TODO add github
+
+else {
+	die "Not a valid type: key,s3,bak\n";
+}
+
+
+my $ssh = $ENV{XGIT_SSH} || die("Must provide XGIT_SSH");
+my $KEYDIR = $ENV{XGIT_KEYDIR} || die("Must provide XGIT_KEYDIR");
+my $S3 = $ENV{XGIT_S3} || die("Must provide XGIT_S3");
+
+# ------------------------------------------------------------------------------
+if ($type eq 'key') {
+	# XXX list {short}.git at keydir
+}
+
+elsif ($type eq 'bak') {
+	# XXX ls *.git, display first part
+	$found = 0;
+	open (my $exec, "ssh $ssh 'ls -d $short.git' |");
+	while (<$exec>) {
+		if (/$short/) {
+			$found = 1;
+			last;
+		}
+	}
+	close $exec;
+}
+
+elsif ($type eq 's3') {
+	# XXX how to list s3 ?
+}
+
+# XXX add github
+
+else {
+	die "Assert: No valid type";
+}
+

@@ -1,0 +1,84 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+use Cwd;
+
+
+# COPYRIGHT: Scott Penrose, scottp@dd.com.au, http://scott.dd.com.au/, 2011
+# LICENSE: Artistic 2.0 - http://www.opensource.org/licenses/Artistic-2.0
+# PURPOSE: Update a set of directories to repository named
+# VERSION: Pre-Alpha
+
+# git_update_set key
+#	Where "key" is the name of the repository and can be
+#	"key"		Check it on the USB Key
+#	"origin"	Careful, you are updating origin
+#	"backup"	Only those that have a "backup"
+#	"admin.dd.com.au"	Only those that have a "backup" or "origin" on admin.dd.com.au
+
+my $repo = shift || die("You must supply a repo name or host\n");
+my $type = $repo =~ /\./ ? 'host' : 'name';
+my $test = $repo;
+my $debug = shift;
+my $cwd = getcwd;
+
+# Check current dirs...
+opendir(my $dirh, ".");
+
+foreach my $dir (grep { -d "$cwd/$_/.git" } readdir($dirh)) {
+	chdir "$cwd/$dir";
+	print "Testing $dir\n";
+	my $found = 0;
+	
+	# List remotes
+	open (my $gitfh, "git remote -v |");
+	while (<$gitfh>) {
+		my ($line_name, $line_full, $rest) = split(/\s+/, $_, 3);
+		my $line_host = $line_full;
+		$line_host =~ s/^.+@//;
+		$line_host =~ s/:.+$//;
+
+		# Match by name
+		if ($type eq 'name') {
+			if ($line_name eq $test) {
+				$found = 1;
+			}
+		}
+		
+		# Match by hostname
+		elsif ($type eq 'host') {
+			if ($line_host eq $test) {
+				$repo = $line_name;
+				$found = 1;
+			}
+		}
+	}
+	close $gitfh;
+
+	# Found it !
+	if ($found) {
+		print "\tUpdating...\n";
+		if ($debug) {
+			print "\t\tNot really, while in debug\n";
+		}
+		else {
+			# XXX Probably && not ;
+			# XXX what branch? Probably best to do current branch
+			# XXX consider push being optional
+			if ($repo eq 's3') {
+				# XXX what about merge?
+				system("jgit fetch $repo; jgit push $repo");
+			}
+			else {
+				system("git pull $repo; git push $repo");
+			}
+		}
+	}
+	else {
+		print "\tSkipping...\n";
+	}
+
+}
+close $dirh;
+
+chdir $cwd;

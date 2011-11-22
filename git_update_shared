@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# COPYRIGHT: Scott Penrose, scottp@dd.com.au, http://scott.dd.com.au/, 2011
+# LICENSE: Artistic 2.0 - http://www.opensource.org/licenses/Artistic-2.0
+# PURPOSE: Automatically update Meriden Shared and Local Shared repositories
+# VERSION: Pre-Alpha
+
+set -e
+# Debug
+# set -x
+
+if [ ! -d "$XGIT_SHARED_REMOTE" ]; then
+	echo "Not online. You need access to meriden."
+	exit 1
+fi
+
+update ()
+{
+	for REPO in "$@"
+		do
+			echo "${REPO} updating"
+
+			cd "$XGIT_SHARED_REMOTE/$REPO/shared"
+
+			# Commit existing files on Shared entry
+			#	NOTE: Does not add new files
+			set +e
+			git commit -a -m 'Shared update'
+			set -e
+			git pull
+			git push
+
+			# Update local
+			cd $XGIT_SHARED_LOCAL/$REPO
+			git pull
+
+			echo "${REPO} Up to date"
+		done
+}
+
+# TODO: "all" to update all by name in $XGIT_SHARED_LOCAL
+update "$@"
