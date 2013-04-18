@@ -8,18 +8,31 @@ use Cwd;
 # PURPOSE: List repositories at a location, by name and clone URL
 # VERSION: Pre-Alpha
 
+my $ssh = $ENV{XGIT_SSH} || die("Must provide XGIT_SSH");
+my $KEYDIR = $ENV{XGIT_KEYDIR} || die("Must provide XGIT_KEYDIR");
+my $S3 = $ENV{XGIT_S3} || die("Must provide XGIT_S3");
 
 # ------------------------------------------------------------------------------
 my $type = shift || "";
+my $id = shift || $type;
 if ($type eq 'key') {
-	print STDERR "Listing key\n";
+	#print STDERR "Listing key\n";
 }
 elsif ($type eq 's3') {
-	print STDERR "Listing s3\n";
+	#print STDERR "Listing s3\n";
 }
 # TODO or origin
 elsif ($type eq 'bak') {
-	print STDERR "Listing bak\n";
+	#print STDERR "Listing bak\n";
+	$type = 'ssh';
+}
+elsif ($type =~ /[a-z0-9]+\@.+\..+$/) {
+        #print STDERR "Adding SSH service = $type\n";
+        $ssh = $type;
+        if ($id =~ /\@/) {
+                $id = 'origin';
+        }
+        $type = 'ssh';
 }
 # TODO add github
 
@@ -27,25 +40,19 @@ else {
 	die "Not a valid type: key,s3,bak\n";
 }
 
-
-my $ssh = $ENV{XGIT_SSH} || die("Must provide XGIT_SSH");
-my $KEYDIR = $ENV{XGIT_KEYDIR} || die("Must provide XGIT_KEYDIR");
-my $S3 = $ENV{XGIT_S3} || die("Must provide XGIT_S3");
-
 # ------------------------------------------------------------------------------
 if ($type eq 'key') {
 	# XXX list {short}.git at keydir
 }
 
-elsif ($type eq 'bak') {
+elsif ($type eq 'ssh') {
 	# XXX ls *.git, display first part
-	$found = 0;
-	open (my $exec, "ssh $ssh 'ls -d $short.git' |");
+	my $found = 0;
+	open (my $exec, "ssh $ssh 'ls -d *.git' |");
 	while (<$exec>) {
-		if (/$short/) {
-			$found = 1;
-			last;
-		}
+		chomp;
+		s/\.git//;
+		print "$_ = git clone $ssh:$_\n";
 	}
 	close $exec;
 }
