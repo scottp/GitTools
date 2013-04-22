@@ -8,13 +8,15 @@ use Cwd;
 # PURPOSE: Add a repository by name
 # VERSION: Pre-Alpha
 
-# NOTES:
-# 	Adding "github" as origin (TODO: Add option to add entry as origin with	tracking)
-# 		git_add github
-# 		git remote rename github origin
+my $ssh = $ENV{XGIT_SSH} || die("Must provide XGIT_SSH");
+my $KEYDIR = $ENV{XGIT_KEYDIR} || die("Must provide XGIT_KEYDIR");
+my $S3 = $ENV{XGIT_S3} || die("Must provide XGIT_S3");
+die "Not a valid local git repo\n" unless (-d ".git");
+>>>>>>> 71abf2a39cb690d558369519509b8b397afd5ccf
 
 # ------------------------------------------------------------------------------
 my $type = shift || "";
+my $id = shift || $type;
 
 # USB Key
 if ($type eq 'key') {
@@ -25,13 +27,20 @@ if ($type eq 'key') {
 elsif ($type eq 's3') {
 	print STDERR "Adding s3\n";
 }
-
-# Backup (TODO: Add origin as alternative name for same location)
 elsif ($type eq 'bak') {
 	print STDERR "Adding bak\n";
+	$id = 'bak';
+	$type = 'ssh';
+}
+elsif ($type =~ /[a-z0-9]+\@.+\..+$/) {
+	print STDERR "Adding SSH service = $type\n";
+	$ssh = $type;
+	if ($id =~ /\@/) {
+		$id = 'origin';
+	}
+	$type = 'ssh';
 }
 
-# TODO: Add github
 elsif ($type eq 'github') {
 	print STDERR "Adding github\n";
 }
@@ -44,7 +53,6 @@ my $ssh = $ENV{XGIT_SSH} || die("Must provide XGIT_SSH");
 my $KEYDIR = $ENV{XGIT_KEYDIR} || die("Must provide XGIT_KEYDIR");
 my $S3 = $ENV{XGIT_S3} || die("Must provide XGIT_S3");
 my $github = $ENV{XGIT_GITHUB} || die("Must provide XGIT_GITHUB");
-# TODO - consider looking at global github value
 die "Not a valid local git repo\n" unless (-d ".git");
 
 # ------------------------------------------------------------------------------
@@ -58,13 +66,13 @@ die "Not valid git subdir\n" unless (-d "../$short/.git");
 open (my $in, "git remote |");
 my $found = 0;
 while (<$in>) {
-	if ($_ =~ /$type/) {
+	if ($_ =~ /$id/) {
 		$found = 1;
 		last;
 	}
 }
 close $in;
-die "$type was already found\n" if ($found);
+die "$id for $type was already found\n" if ($found);
 
 my $remote = "";
 
@@ -83,7 +91,7 @@ if ($type eq 'key') {
 	$remote = "$KEYDIR/$short.git";
 }
 
-elsif ($type eq 'bak') {
+elsif ($type eq 'ssh') {
 
 	$found = 0;
 	open (my $exec, "ssh $ssh 'ls -d $short.git' |");
@@ -120,7 +128,7 @@ else {
 }
 
 # ------------------------------------------------------------------------------
-print STDERR "Adding $type $remote\n";
-system("git remote add $type $remote");
+print STDERR "Adding $type $id $remote\n";
+system("git remote add $id $remote");
 system('git remote -v');
 
