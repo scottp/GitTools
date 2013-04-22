@@ -8,6 +8,11 @@ use Cwd;
 # PURPOSE: Add a repository by name
 # VERSION: Pre-Alpha
 
+# NOTES:
+# 	Adding "github" as origin (TODO: Add option to add entry as origin with	tracking)
+# 		git_add github
+# 		git remote rename github origin
+
 # ------------------------------------------------------------------------------
 my $type = shift || "";
 
@@ -27,6 +32,9 @@ elsif ($type eq 'bak') {
 }
 
 # TODO: Add github
+elsif ($type eq 'github') {
+	print STDERR "Adding github\n";
+}
 
 else {
 	die "Not a valid type: key,s3,bak\n";
@@ -35,6 +43,8 @@ else {
 my $ssh = $ENV{XGIT_SSH} || die("Must provide XGIT_SSH");
 my $KEYDIR = $ENV{XGIT_KEYDIR} || die("Must provide XGIT_KEYDIR");
 my $S3 = $ENV{XGIT_S3} || die("Must provide XGIT_S3");
+my $github = $ENV{XGIT_GITHUB} || die("Must provide XGIT_GITHUB");
+# TODO - consider looking at global github value
 die "Not a valid local git repo\n" unless (-d ".git");
 
 # ------------------------------------------------------------------------------
@@ -96,7 +106,13 @@ elsif ($type eq 'bak') {
 }
 
 elsif ($type eq 's3') {
-	$remote = $S3 . '/' . $cwd . '.git';
+	$remote = $S3 . '/' . $short . '.git';
+}
+
+elsif ($type eq 'github') {
+	# XXX Create repo if necessary (see http://develop.github.com/p/repo.html)
+	
+	$remote = "git\@github.com:$github/$short.git";
 }
 
 else {
