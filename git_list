@@ -14,14 +14,13 @@ my $S3 = $ENV{XGIT_S3} || die("Must provide XGIT_S3");
 
 # ------------------------------------------------------------------------------
 my $type = shift || "";
-my $id = shift || $type;
+my $shell = shift || "";
 if ($type eq 'key') {
 	#print STDERR "Listing key\n";
 }
 elsif ($type eq 's3') {
 	#print STDERR "Listing s3\n";
 }
-# TODO or origin
 elsif ($type eq 'bak') {
 	#print STDERR "Listing bak\n";
 	$type = 'ssh';
@@ -29,13 +28,8 @@ elsif ($type eq 'bak') {
 elsif ($type =~ /[a-z0-9]+\@.+\..+$/) {
         #print STDERR "Adding SSH service = $type\n";
         $ssh = $type;
-        if ($id =~ /\@/) {
-                $id = 'origin';
-        }
         $type = 'ssh';
 }
-# TODO add github
-
 else {
 	die "Not a valid type: key,s3,bak\n";
 }
@@ -52,7 +46,12 @@ elsif ($type eq 'ssh') {
 	while (<$exec>) {
 		chomp;
 		s/\.git//;
-		print "$_ = git clone $ssh:$_\n";
+		if ($shell eq 'sh') {
+			print "git clone $ssh:$_\n";
+		}
+		else {
+			print "$_ = git clone $ssh:$_\n";
+		}
 	}
 	close $exec;
 }
