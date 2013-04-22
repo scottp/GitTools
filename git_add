@@ -11,8 +11,8 @@ use Cwd;
 my $ssh = $ENV{XGIT_SSH} || die("Must provide XGIT_SSH");
 my $KEYDIR = $ENV{XGIT_KEYDIR} || die("Must provide XGIT_KEYDIR");
 my $S3 = $ENV{XGIT_S3} || die("Must provide XGIT_S3");
+my $github = $ENV{XGIT_GITHUB} || die("Must provide XGIT_GITHUB");
 die "Not a valid local git repo\n" unless (-d ".git");
->>>>>>> 71abf2a39cb690d558369519509b8b397afd5ccf
 
 # ------------------------------------------------------------------------------
 my $type = shift || "";
@@ -49,11 +49,6 @@ else {
 	die "Not a valid type: key,s3,bak\n";
 }
 
-my $ssh = $ENV{XGIT_SSH} || die("Must provide XGIT_SSH");
-my $KEYDIR = $ENV{XGIT_KEYDIR} || die("Must provide XGIT_KEYDIR");
-my $S3 = $ENV{XGIT_S3} || die("Must provide XGIT_S3");
-my $github = $ENV{XGIT_GITHUB} || die("Must provide XGIT_GITHUB");
-die "Not a valid local git repo\n" unless (-d ".git");
 
 # ------------------------------------------------------------------------------
 my $cwd = getcwd;

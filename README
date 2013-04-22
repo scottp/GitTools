@@ -1,3 +1,9 @@
 See http://scott.dd.com.au/wiki/Git_Tools
 
-	
+You need to set the following variables:
+
+XGIT_SSH - e.g. git@yourfavserver.com
+XGIT_KEYDIR - e.g. /mnt/key1 or NA
+XGIT_S3 - amazon-s3://.jgit_s3_private@yourservice or NA
+XGIT_GITHUB - your_git_name or NA
+
