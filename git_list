@@ -47,10 +47,15 @@ elsif ($type eq 'ssh') {
 		chomp;
 		s/\.git//;
 		if ($shell eq 'sh') {
-			print "git clone $ssh:$_\n";
+			if (!-d $_) {
+				print "git clone $ssh:$_\n";
+			}
 		}
 		else {
-			print "$_ = git clone $ssh:$_\n";
+			print "$_ "
+				. (-d $_ ? '' : '(new)')
+				. " = git clone $ssh:$_\n"
+			;
 		}
 	}
 	close $exec;
