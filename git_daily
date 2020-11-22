@@ -1,0 +1,13 @@
+#!/bin/bash
+# Generates changelog day by day
+NEXT=$(date +%F)
+echo "CHANGELOG"
+echo ----------------------
+# For each date...
+git log --no-merges --format="%cd" --date=short | sort -u -r | while read DATE ; do
+    echo
+    echo [$DATE]
+    GIT_PAGER=cat git whatchanged --since=$DATE --until=$NEXT
+    # echo "git whatchanged --since=$DATE --until=$NEXT"
+    NEXT=$DATE
+done

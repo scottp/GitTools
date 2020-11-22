@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+use strict;
+
+my $in = `ls -d */.git`;
+
+my @libs = split(/\n/, $in);
+my $all = "";
+foreach my $lib (@libs) {
+    $lib =~ s/\/.git$//;
+
+    my $exec = `cd $lib && git status --porcelain`;
+    $exec =~ s/[\r\n][\r\n]//g;
+    if ($exec) {
+        $all .= "$lib\n$exec\n";
+    }
+}
+print $all;
